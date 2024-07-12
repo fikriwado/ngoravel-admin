@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -17,8 +18,16 @@ class NewPasswordController extends Controller
     /**
      * Display the password reset view.
      */
-    public function create(Request $request): View
+    public function create(Request $request, $token): View
     {
+        $userToken = DB::table('password_reset_tokens')
+                    ->where('email', $request->query('email'))
+                    ->first();
+
+        if (!$userToken || !Hash::check($token, $userToken->token)) {
+            return abort(404);
+        }
+
         return view('auth.reset-password', ['request' => $request]);
     }
 
